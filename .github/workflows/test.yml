@@ -1,0 +1,31 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Regression tests
+        run: |
+          python tests/test_host.py --bash /bin/bash
+          node tests/ports-validation.cjs
+          node tests/device-names.cjs
+          python tools/build.py
+      - name: Privacy fixture check
+        shell: bash
+        run: |
+          ! grep -RIE '192\.168\.1\.|OnePlus|Caspia|XuChengwei|YouGuohao|outlook\.com|AppData|Documents\\Codex' \
+            --exclude-dir=.git --exclude='*.tar.gz' .

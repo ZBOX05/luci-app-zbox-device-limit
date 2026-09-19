@@ -1,0 +1,8 @@
+{
+  "admin/network/zbox-device-limit": {
+    "title": "设备限速",
+    "order": 65,
+    "action": { "type": "view", "path": "zbox-device-limit/settings" },
+    "depends": { "acl": ["luci-app-zbox-device-limit"], "uci": {"zbox-device-limit": true} }
+  }
+}

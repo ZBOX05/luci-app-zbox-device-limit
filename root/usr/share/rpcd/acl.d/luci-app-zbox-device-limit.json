@@ -1,0 +1,13 @@
+{
+  "luci-app-zbox-device-limit": {
+    "description": "Manage MAC device rate limits",
+    "read": {
+      "ubus": { "luci.zbox-device-limit": ["status", "devices"] },
+      "uci": ["zbox-device-limit"]
+    },
+    "write": {
+      "ubus": { "luci.zbox-device-limit": ["apply"] },
+      "uci": ["zbox-device-limit"]
+    }
+  }
+}

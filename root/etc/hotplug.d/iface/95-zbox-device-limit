@@ -1,0 +1,4 @@
+#!/bin/sh
+case "$ACTION" in
+    ifup|ifupdate) /etc/zbox-device-limit/load.sh >/dev/null 2>&1 || :;;
+esac

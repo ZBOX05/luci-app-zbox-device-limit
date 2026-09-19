@@ -1,0 +1,8 @@
+#!/bin/sh /etc/rc.common
+START=95
+STOP=10
+USE_PROCD=1
+start_service() { /etc/zbox-device-limit/load.sh; }
+reload_service() { /etc/zbox-device-limit/load.sh; }
+stop_service() { /etc/zbox-device-limit/load.sh stop; }
+service_triggers() { procd_add_reload_trigger zbox-device-limit; }

@@ -1,0 +1,36 @@
+table bridge zbox_device_limit {
+    set unlimited {
+        type ether_addr
+        elements = {
+            02:11:22:33:44:55,
+            02:11:22:33:44:66
+        }
+    }
+    set upload_per_mac {
+        type ether_addr
+        size 4096
+        flags dynamic,timeout
+    }
+    set download_per_mac {
+        type ether_addr
+        size 4096
+        flags dynamic,timeout
+    }
+    chain upload {
+        type filter hook input priority -10; policy accept;
+        iifname != { "lan1", "lan2", "lan3", "wl0-ap0", "wl1-ap0" } return
+        ether saddr @unlimited return
+        ether type != { ip, ip6 } return
+        counter
+        update @upload_per_mac { ether saddr timeout 10m limit rate over 500 kbytes/second burst 125 kbytes } counter drop
+    }
+    chain download {
+        type filter hook output priority -10; policy accept;
+        oifname != { "lan1", "lan2", "lan3", "wl0-ap0", "wl1-ap0" } return
+        ether daddr @unlimited return
+        ether daddr & 01:00:00:00:00:00 == 01:00:00:00:00:00 return
+        ether type != { ip, ip6 } return
+        counter
+        update @download_per_mac { ether daddr timeout 10m limit rate over 500 kbytes/second burst 125 kbytes } counter drop
+    }
+}

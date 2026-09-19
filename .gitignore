@@ -1,0 +1,17 @@
+dist/
+__pycache__/
+*.pyc
+.env
+*.key
+*.pem
+*.log
+*.backup*
+*.previous
+config.good*
+rules.nft
+legacy-directory.tar.gz
+firewall.full.uci
+firewall.section.uci
+runtime.nft
+uninstalled-config.uci
+.installed

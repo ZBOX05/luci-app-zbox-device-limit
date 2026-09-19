@@ -1,0 +1,85 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+. /usr/share/libubox/jshn.sh
+case "$1" in
+list)
+    echo '{"status":{},"devices":{},"apply":{}}'
+    ;;
+call)
+    case "$2" in
+    status)
+        json_init
+        active=0
+        nft list table bridge zbox_device_limit >/dev/null 2>&1 && active=1
+        json_add_boolean active "$active"
+        json_add_string enabled "$(uci -q get zbox-device-limit.global.enabled || echo 0)"
+        json_add_string error "$(head -c 2048 /tmp/zbox-device-limit/last-error 2>/dev/null)"
+        json_add_string last_apply "$(cat /tmp/zbox-device-limit/last-apply 2>/dev/null)"
+        json_add_string offloading "$(uci -q get firewall.@defaults[0].flow_offloading || echo 0)"
+        json_add_string hardware_offloading "$(uci -q get firewall.@defaults[0].flow_offloading_hw || echo 0)"
+        json_dump
+        ;;
+    devices)
+        json_init
+        # Static DHCP names remain useful even without an active lease.
+        # Read only; do not change DHCP or require broader UCI write access.
+        . /lib/functions.sh
+        static_host() {
+            local host_name host_ip host_macs host_mac
+            config_get host_name "$1" name
+            config_get host_ip "$1" ip
+            config_get host_macs "$1" mac
+            for host_mac in $host_macs; do
+                host_mac=$(printf '%s' "$host_mac" | tr A-F a-f)
+                printf '%s\n' "$host_mac" | grep -Eq '^([0-9a-f]{2}:){5}[0-9a-f]{2}$' || continue
+                json_add_object ''
+                json_add_string mac "$host_mac"
+                json_add_string name "$host_name"
+                json_add_string ip "$host_ip"
+                json_close_object
+            done
+        }
+        json_add_array hosts
+        if config_load dhcp; then config_foreach static_host host; fi
+        json_close_array
+        json_add_array devices
+        now=$(date +%s)
+        if [ -r /tmp/dhcp.leases ]; then
+            # A live lease is not proof of reachability. Report the evidence accurately.
+            while read -r expiry mac ip name rest; do
+                case "$expiry" in ''|*[!0-9]*) continue;; esac
+                [ "$expiry" = 0 ] || [ "$expiry" -gt "$now" ] || continue
+                echo "$mac" | grep -Eq '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$' || continue
+                mac=$(echo "$mac" | tr A-F a-f)
+                state=lease
+                if ip neigh show 2>/dev/null | awk -v m="$mac" 'tolower($0) ~ m && /REACHABLE/ {found=1} END {exit !found}'; then
+                    state=reachable
+                fi
+                json_add_object ''
+                json_add_string mac "$mac"
+                json_add_string ip "$ip"
+                [ "$name" != '*' ] || name=''
+                json_add_string name "$name"
+                json_add_string state "$state"
+                json_close_object
+            done < /tmp/dhcp.leases
+        fi
+        json_close_array
+        json_dump
+        ;;
+    apply)
+        # Fixed operation, no command/path/config arguments from the caller.
+        message=$(/etc/zbox-device-limit/load.sh 2>&1)
+        result=$?
+        json_init
+        json_add_boolean ok "$([ "$result" = 0 ] && echo 1 || echo 0)"
+        json_add_string message "$message"
+        json_dump
+        ;;
+    *) exit 1;;
+    esac
+    ;;
+*) exit 1;;
+esac
