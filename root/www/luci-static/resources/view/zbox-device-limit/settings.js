@@ -52,6 +52,26 @@ function useKB(option) {
     };
 }
 
+function useBurstKB(option) {
+    option.cfgvalue = function(sid) {
+        const raw = uci.get(config, sid, option.option);
+        if (raw == null || raw === '') return raw;
+        const n = Number(raw);
+        return Number.isFinite(n) ? String(n / 1000) : raw;
+    };
+    option.validate = function(sid, value) {
+        if (!/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.test(value || ''))
+            return '请输入有效的 KB 数值';
+        const n = Number(value);
+        if (n < 0 || n > 100000 || !Number.isInteger(n * 1000))
+            return '范围为 0–100000 KB，最小步进为 0.001 KB';
+        return true;
+    };
+    option.write = function(sid, value) {
+        uci.set(config, sid, option.option, String(Math.round(Number(value) * 1000)));
+    };
+}
+
 return view.extend({
     load: function() {
         return Promise.all([uci.load(config), getStatus(), getDevices()]).then(function(data) {
@@ -72,8 +92,8 @@ return view.extend({
             const v = s.option(form.Value, dir + '_rate', dir === 'download' ? '默认下载 (KB/s)' : '默认上传 (KB/s)');
             v.rmempty = false; useKB(v);
         });
-        o = s.option(form.Value, 'burst_bytes', '额外突发额度 (bytes)', '保留旧规则的突发额度；测速请持续至少 30 秒。');
-        o.datatype = 'range(0,100000000)'; o.rmempty = false;
+        o = s.option(form.Value, 'burst_bytes', '额外突发额度 (KB)', '短时间可额外通过的数据量；128 KB 会在底层精确保存为 128000 bytes。测速请持续至少 30 秒。');
+        o.rmempty = false; useBurstKB(o);
         o = s.option(form.DynamicList, 'ports', 'LAN / Wi-Fi 成员端口', '首次使用请填写本机实际 LAN/Wi-Fi 成员端口；迁移安装会保留旧端口。不要填写 WAN。');
         o.rmempty = true;
         o.validate = function(sid, v) {

@@ -15,4 +15,7 @@ assert.equal(toKB('0'), '0');
 assert.equal(toKB(''), '');
 assert.match(source, /Math\.round\(Number\(value\) \* 8\)/);
 assert.match(source, /Number\.isInteger\(n \* 8\)/);
-console.log('PASS: KB/s display and lossless Kbit/s storage conversion');
+assert.match(source, /String\(n \/ 1000\)/);
+assert.match(source, /Math\.round\(Number\(value\) \* 1000\)/);
+assert.match(source, /额外突发额度 \(KB\)/);
+console.log('PASS: KB/s rates and KB burst use lossless storage conversion');

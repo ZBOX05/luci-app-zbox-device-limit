@@ -1,3 +1,7 @@
+# 1.0.4 (local preview)
+
+- LuCI 将突发容量显示为十进制 KB；旧 bytes 配置自动换算，底层规则不变。
+
 # 1.0.3 (experimental)
 
 - LuCI 的速率输入和显示改为十进制 KB/s；旧 UCI Kbit/s 配置自动换算，无需手工迁移。
