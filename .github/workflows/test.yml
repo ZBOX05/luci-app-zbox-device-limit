@@ -28,4 +28,4 @@ jobs:
         shell: bash
         run: |
           ! grep -RIE '192\.168\.1\.|OnePlus|Caspia|XuChengwei|YouGuohao|outlook\.com|AppData|Documents\\Codex' \
-            --exclude-dir=.git --exclude='*.tar.gz' .
+            --exclude-dir=.git --exclude='*.tar.gz' --exclude='test.yml' .
