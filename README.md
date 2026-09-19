@@ -37,10 +37,10 @@
 将整个仓库目录复制到路由器，或在电脑运行 `python tools/build.py` 生成安装压缩包。以下 `ROUTER_ADDRESS` 替换为实际地址：
 
 ```sh
-scp -O dist/luci-app-zbox-device-limit-1.0.2.tar.gz root@ROUTER_ADDRESS:/tmp/
+scp -O dist/luci-app-zbox-device-limit-1.0.3.tar.gz root@ROUTER_ADDRESS:/tmp/
 ssh root@ROUTER_ADDRESS
 cd /tmp
-tar -xzf luci-app-zbox-device-limit-1.0.2.tar.gz
+tar -xzf luci-app-zbox-device-limit-1.0.3.tar.gz
 cd luci-app-zbox-device-limit
 sh install.sh
 ```
@@ -60,7 +60,7 @@ sh install.sh
 | 自定义限速 | 使用设备设置 | 使用设备设置 |
 | 始终不限速 | 不限速 | 不限速 |
 
-自定义方向留空继承默认，0 表示该方向不限速。Kbit/s 为十进制，4000 对应 500000 bytes/second；旧 nft kbytes 为 1024 bytes，迁移保留实际字节速率。名单模式改变会改变 member 行含义，不改变显式自定义策略。
+自定义方向留空继承默认，0 表示该方向不限速。LuCI 使用常见的十进制 `KB/s`（1 KB/s = 1000 bytes/second）；例如 500 KB/s 对应 500000 bytes/second。为兼容旧版本，UCI 内部仍保存 Kbit/s，页面会自动无损换算，升级后不需要重填。旧 nft 的 kbytes 使用 1024 bytes，迁移仍保留实际字节速率。名单模式改变会改变 member 行含义，不改变显式自定义策略。
 
 静态 DHCP 名称优先，其次已保存名称和动态租约名称；静态名称更新后刷新页面。静态租约不表示在线，动态租约也只证明近期租用过地址。设备状态以租约及邻居可达信息呈现，不承诺实时在线检测。
 

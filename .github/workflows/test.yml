@@ -23,6 +23,7 @@ jobs:
           python tests/test_host.py --bash /bin/bash
           node tests/ports-validation.cjs
           node tests/device-names.cjs
+          node tests/rate-units.cjs
           python tools/build.py
       - name: Privacy fixture check
         shell: bash

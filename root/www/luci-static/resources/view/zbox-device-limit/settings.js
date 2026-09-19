@@ -28,6 +28,30 @@ function macValid(sid, value) {
     return true;
 }
 
+function rateToKB(raw) {
+    if (raw == null || raw === '') return raw;
+    const n = Number(raw);
+    return Number.isFinite(n) ? String(n / 8) : raw;
+}
+
+function useKB(option) {
+    option.cfgvalue = function(sid) {
+        return rateToKB(uci.get(config, sid, option.option));
+    };
+    option.validate = function(sid, value) {
+        if ((value == null || value === '') && option.rmempty) return true;
+        if (!/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.test(value || ''))
+            return '请输入有效的 KB/s 数值';
+        const n = Number(value);
+        if (n < 0 || n > 1250000 || !Number.isInteger(n * 8))
+            return '范围为 0–1250000 KB/s，最小步进为 0.125 KB/s';
+        return true;
+    };
+    option.write = function(sid, value) {
+        uci.set(config, sid, option.option, String(Math.round(Number(value) * 8)));
+    };
+}
+
 return view.extend({
     load: function() {
         return Promise.all([uci.load(config), getStatus(), getDevices()]).then(function(data) {
@@ -45,8 +69,8 @@ return view.extend({
         o.value('blacklist', '黑名单模式');
         o.rmempty = false;
         ['download', 'upload'].forEach(function(dir) {
-            const v = s.option(form.Value, dir + '_rate', dir === 'download' ? '默认下载 (Kbit/s)' : '默认上传 (Kbit/s)');
-            v.datatype = 'range(0,10000000)'; v.rmempty = false;
+            const v = s.option(form.Value, dir + '_rate', dir === 'download' ? '默认下载 (KB/s)' : '默认上传 (KB/s)');
+            v.rmempty = false; useKB(v);
         });
         o = s.option(form.Value, 'burst_bytes', '额外突发额度 (bytes)', '保留旧规则的突发额度；测速请持续至少 30 秒。');
         o.datatype = 'range(0,100000000)'; o.rmempty = false;
@@ -80,9 +104,10 @@ return view.extend({
         o.value('unlimited', '始终不限速');
         o.default = 'member'; o.rmempty = false;
         ['download', 'upload'].forEach(function(dir) {
-            const v = s.option(form.Value, dir + '_rate', dir === 'download' ? '下载 (Kbit/s)' : '上传 (Kbit/s)');
-            v.depends('policy', 'custom'); v.datatype = 'range(0,10000000)';
+            const v = s.option(form.Value, dir + '_rate', dir === 'download' ? '下载 (KB/s)' : '上传 (KB/s)');
+            v.depends('policy', 'custom');
             v.placeholder = '留空使用默认'; v.rmempty = true;
+            useKB(v);
         });
         o = s.option(form.DummyValue, '_lease', 'IP / 设备状态');
         o.cfgvalue = function(sid) {

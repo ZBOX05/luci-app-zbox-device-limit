@@ -9,7 +9,7 @@ paths=sorted(p for p in base.rglob('*') if p.is_file() and not any(x in ('.git',
 (base/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(base).as_posix()+'\n' for p in paths),encoding='utf-8',newline='\n')
 paths.append(base/'SHA256SUMS')
 (base/'dist').mkdir(exist_ok=True)
-archive=base/'dist/luci-app-zbox-device-limit-1.0.2.tar.gz'
+archive=base/'dist/luci-app-zbox-device-limit-1.0.3.tar.gz'
 with tarfile.open(archive,'w:gz') as tar:
     for p in paths:
         rel=p.relative_to(base).as_posix()
